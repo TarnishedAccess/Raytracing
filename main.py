@@ -32,8 +32,9 @@ def main():
                 color = (255, 255, 255)
                 screen.set_at((x, y), color)
 
-    pygame.display.flip()
+            pygame.display.update((x, y, 1, 1))
 
+    pygame.display.flip()
     running = True
     while running:
         for event in pygame.event.get():
