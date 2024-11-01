@@ -1,4 +1,5 @@
 import pygame
+import numpy as np
 from camera import Camera
 from objectHandler import Sphere
 
@@ -15,7 +16,11 @@ def main():
 
     camera = Camera(camera_position, screen_width, screen_height, fov)
     #(x, y, z), radius
-    sphere = Sphere((0, 0, -5), 1)
+    spheres = [
+        Sphere((0, 0, -5), 1, (255, 0, 0)),
+        Sphere((4, 0, -7), 1, (0, 0, 255)),
+        Sphere((-2, 0, -7), 1, (0, 255, 0))
+    ]
     #black background, will probably replace with a floor/skybox or something later
     background_color = (0, 0, 0)
     screen.fill(background_color)
@@ -23,16 +28,22 @@ def main():
     for y in range(screen_height):
         for x in range(screen_width):
             ray = camera.castRay(x, y)
-            intersection_point = sphere.intersect(ray)
             #will probably refactor intersection detection later on so that it's based on the ray rather than the object. I think it'd be better that way?
-            #TODO
-            if intersection_point is not None:
-                #would be easy to add color, just give the objects a color attribute and use it here
-                #TODO
-                color = (255, 255, 255)
-                screen.set_at((x, y), color)
+            closest_t = np.inf
+            closest_sphere = None
 
-            pygame.display.update((x, y, 1, 1))
+            for sphere in spheres:
+                intersection_point, t = sphere.intersect(ray)
+                if intersection_point is not None:
+                    if t < closest_t:
+                        closest_t = t
+                        closest_sphere = sphere
+                        #find the intersection point of each sphere and render the closest one.
+
+            if closest_sphere:
+                color = closest_sphere.color
+                screen.set_at((x, y), color)
+                pygame.display.update((x, y, 1, 1))
 
     pygame.display.flip()
     running = True

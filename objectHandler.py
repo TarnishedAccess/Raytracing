@@ -6,9 +6,10 @@ class Object():
     pass
 
 class Sphere():
-    def __init__(self, center, radius):
+    def __init__(self, center, radius, color):
         self.center = center
         self.radius = radius
+        self.color = color
 
     def intersect(self, ray):
 
@@ -39,7 +40,7 @@ class Sphere():
 
         delta = b**2 - 4*a*c
         if delta < 0:
-            return None
+            return None, None
         else:
             t1 = (-b - np.sqrt(delta)) / (2*a)
             t2 = (-b + np.sqrt(delta)) / (2*a)
@@ -55,7 +56,7 @@ class Sphere():
 
             #plug t into the ray equation to find the intersection point and return it
             intersection = origin + direction * t
-            return intersection
+            return (intersection, t)
             
 #simple test to check if the intersection works
 if __name__ == "__main__":
@@ -69,7 +70,7 @@ if __name__ == "__main__":
     ray_direction_normalized = ray_direction / np.linalg.norm(ray_direction)
 
     ray = Ray(ray_origin, ray_direction_normalized)
-    sphere = Sphere(sphere_center, sphere_radius)
+    sphere = Sphere(sphere_center, sphere_radius, (255, 0, 0))
 
     intersection_point = sphere.intersect(ray)
 
