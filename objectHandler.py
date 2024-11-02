@@ -5,6 +5,31 @@ class Object():
     #will add support for custom objects here later, make do with spheres (and maybe cubes) for now.
     pass
 
+class Plane():
+    def __init__(self, yLevel, color):
+        self.yLevel = yLevel
+        self.color = color
+
+    def intersect(self, ray):
+        origin = np.array(ray.origin)
+        direction = np.array(ray.direction)
+        yLevel = np.array(self.yLevel)
+
+        if direction[1] == 0:
+            return None, None
+        
+        #t = y - o.y / d.y
+        #check to make sure d.y != 0 as that's just parallel to the plane and we don't really care about it
+        t = (yLevel - origin[1]) / direction[1]
+
+        #t < 0 means ray is behind the plane. No need to render it.
+        if t < 0:
+            return None, None
+
+        intersection = origin + t * direction
+
+        return (intersection, t)
+
 class Sphere():
     def __init__(self, center, radius, color):
         self.center = center
