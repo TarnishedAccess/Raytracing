@@ -21,7 +21,7 @@ def main():
         Sphere((4, 2, -7), 2, (0, 0, 255)),
         Sphere((-2, 0.5, -7), 0.5, (0, 255, 0)),
         #y, color
-        Plane(0, (50, 50, 50))
+        Plane(0, ((50, 50, 50), (80, 80, 80)))
     ]
     #cyan background, will probably replace with a floor/skybox or something later
     background_color = (135, 206, 235)
@@ -33,6 +33,7 @@ def main():
             #will probably refactor intersection detection later on so that it's based on the ray rather than the object. I think it'd be better that way?
             closest_t = np.inf
             closest_object = None
+            saved_intersection_point = None
 
             for object in objects:
                 intersection_point, t = object.intersect(ray)
@@ -40,11 +41,10 @@ def main():
                     if t < closest_t:
                         closest_t = t
                         closest_object = object
+                        saved_intersection_point = intersection_point
                         #find the intersection point of each object and render the closest one.
-
             if closest_object:
-                color = closest_object.color
-                screen.set_at((x, y), color)
+                closest_object.render(screen, x, y, saved_intersection_point)
                 pygame.display.update((x, y, 1, 1))
             else:
                 screen.set_at((x, y), background_color)

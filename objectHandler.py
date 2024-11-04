@@ -29,6 +29,18 @@ class Plane():
         intersection = origin + t * direction
 
         return (intersection, t)
+    
+    def render(self, screen, x, y, saved_intersection_point):
+        #If the plane only has one color, we use it.
+        #Otherwise we use a checkerboard pattern
+        if len(self.color) == 1:
+            screen.set_at((x, y), self.color)
+        else:
+            tile_size = 1.25
+            if (saved_intersection_point[0] // tile_size + saved_intersection_point[2] // tile_size) % 2 < 1:
+                screen.set_at((x, y), self.color[0])
+            else:
+                screen.set_at((x, y), self.color[1])
 
 class Sphere():
     def __init__(self, center, radius, color):
@@ -82,6 +94,9 @@ class Sphere():
             #plug t into the ray equation to find the intersection point and return it
             intersection = origin + direction * t
             return (intersection, t)
+        
+    def render(self, screen, x, y, saved_intersection_point):
+        screen.set_at((x, y), self.color)
             
 #simple test to check if the intersection works
 if __name__ == "__main__":
