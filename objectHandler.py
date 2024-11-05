@@ -30,7 +30,15 @@ class Plane():
 
         return (intersection, t)
     
-    def render(self, screen, x, y, saved_intersection_point):
+    def render(self, screen, x, y, saved_intersection_point, light):
+
+        normal = self.get_normal(saved_intersection_point)
+        light_direction = light.calculate_direction(saved_intersection_point)
+        #light intensity is the dot product of the intersection point's normal and the light direction
+        #this lets us see the angle that the light hits it at.
+        #we then scale it by the light's strength
+        intensity = max(0, np.dot(normal, light_direction)) * light.strength
+
         #If the plane only has one color, we use it.
         #Otherwise we use a checkerboard pattern
         if len(self.color) == 1:
@@ -38,9 +46,24 @@ class Plane():
         else:
             tile_size = 1.25
             if (saved_intersection_point[0] // tile_size + saved_intersection_point[2] // tile_size) % 2 < 1:
-                screen.set_at((x, y), self.color[0])
+                converted_color = np.array(self.color[0])
+                #convert the colors to an np array to handle calculations
+                final_color = converted_color * intensity * light.color
+                #final color is the object's color scaled by the light's intensity and affected by the light's color
+                final_color = np.clip(final_color, 0, 255)
+                #if any of the final color's elements exceed 255 we clamp them.
+                #is this the right way of doing it? not sure. TODO
+                screen.set_at((x, y), final_color)
             else:
-                screen.set_at((x, y), self.color[1])
+                converted_color = np.array(self.color[1])
+                final_color = converted_color * intensity * light.color
+                final_color = np.clip(final_color, 0, 255)
+                screen.set_at((x, y), final_color)
+
+    def get_normal(self, intersection_point):
+        #since our plane is always horizontal the normal is always (0, 1, 0)
+        #probably replace this later if we get non horizontal planes
+        return np.array([0, 1, 0])
 
 class Sphere():
     def __init__(self, center, radius, color):
@@ -95,8 +118,22 @@ class Sphere():
             intersection = origin + direction * t
             return (intersection, t)
         
-    def render(self, screen, x, y, saved_intersection_point):
-        screen.set_at((x, y), self.color)
+    def render(self, screen, x, y, saved_intersection_point, light):
+        #refer to the plane rendering function everything is commented there.
+        normal = self.get_normal(saved_intersection_point)
+        light_direction = light.calculate_direction(saved_intersection_point)
+        intensity = max(0, np.dot(normal, light_direction)) * light.strength
+
+        converted_color = np.array(self.color)
+        final_color = converted_color * intensity * light.color
+        final_color = np.clip(final_color, 0, 255)
+        screen.set_at((x, y), final_color)
+
+    def get_normal(self, intersection_point):
+        #a sphere's normal vector is just the vector from the center to the intersection point going outside.
+        vector = np.array(intersection_point) - np.array(self.center)
+        normalized_vector = vector / np.linalg.norm(vector)
+        return normalized_vector
             
 #simple test to check if the intersection works
 if __name__ == "__main__":

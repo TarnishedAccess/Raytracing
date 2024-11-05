@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 from camera import Camera
 from objectHandler import Sphere, Plane
+from light import Light
 
 def main():
     pygame.init()
@@ -15,11 +16,15 @@ def main():
     pygame.display.set_caption("Ray Tracing from Ouedkniss")
 
     camera = Camera(camera_position, screen_width, screen_height, fov)
+
+    light = Light((4, 4, 0), (200, 200, 200), 2)
+    #might add multi-light support later? probably?
+
     objects = [
         #(x, y, z), radius, color
-        Sphere((0, 1, -5), 1, (255, 0, 0)),
-        Sphere((4, 2, -7), 2, (0, 0, 255)),
-        Sphere((-2, 0.5, -7), 0.5, (0, 255, 0)),
+        Sphere((0, 1, -5), 1, (200, 0, 0)),
+        Sphere((4, 2, -7), 2, (100, 100, 100)),
+        Sphere((-2, 0.5, -7), 0.5, (0, 200, 0)),
         #y, color
         Plane(0, ((50, 50, 50), (80, 80, 80)))
     ]
@@ -44,7 +49,7 @@ def main():
                         saved_intersection_point = intersection_point
                         #find the intersection point of each object and render the closest one.
             if closest_object:
-                closest_object.render(screen, x, y, saved_intersection_point)
+                closest_object.render(screen, x, y, saved_intersection_point, light)
                 pygame.display.update((x, y, 1, 1))
             else:
                 screen.set_at((x, y), background_color)
