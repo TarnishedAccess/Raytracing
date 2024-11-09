@@ -19,8 +19,13 @@ def read_object(filename):
 
 
 class Object():
-    #will add support for custom objects here later, make do with spheres (and maybe cubes) for now.
+    """def __init__(self, filename, color):
+        self.vertices, self.faces = read_object(filename)
+        self.color = color"""
+    
+    #will refactor later, just want to make sure it works
     pass
+    
 
 class Triangle():
     def __init__(self, a, b, c, color):
@@ -35,7 +40,7 @@ class Triangle():
         #https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
         #https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html
 
-        #epsilon = 0.00001
+        epsilon = 0.00001
         #haven't had any issues with floating point precision so far but if something comes up just uncomment this and any epsilon instances further below
         
         #calculate two vectors of the triangle with a shared origin. This essentially just gives us the entire thing. Third edge is redundant
@@ -49,8 +54,8 @@ class Triangle():
         determinant = np.dot(edge_vector1, perpendicular_vector)
 
         #we know that if a determinant is zero (or really close to zero in this instance to account for errors) then the ray is parallel to the triangle 
-        #if abs(determinant) < epsilon:
-        if abs(determinant) < 0:
+        #if abs(determinant) < 0:
+        if abs(determinant) < epsilon:
             return None, None
 
         inverse_determinant = 1.0 / determinant
@@ -76,8 +81,8 @@ class Triangle():
         #now we know for a fact its inside the triangle and intersects. We calculate how far along the ray the intersection is.
         ray_distance = inverse_determinant * np.dot(edge_vector2, cross_product_ray)
 
-        #if ray_distance > epsilon:
-        if ray_distance > 0:
+        #if ray_distance > 0:
+        if ray_distance > epsilon:
             #get the intersection point and the distance.
             intersection_point = ray.origin + ray.direction * ray_distance
             return intersection_point, ray_distance

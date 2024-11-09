@@ -1,8 +1,9 @@
 import pygame
 import numpy as np
 from camera import Camera
-from objectHandler import Sphere, Plane, Triangle
+from objectHandler import Sphere, Plane, Triangle, read_object
 from light import Light
+import random
 
 def update_view(screen, render_surface, camera, objects, render_width, render_height, light):
     #black background, will probably replace with a floor/skybox or something later
@@ -42,7 +43,7 @@ def main():
     render_height = 50
     display_width = 900
     display_height = 600
-    camera_position = (0, 1, 0)
+    camera_position = (-3, 3, 6)
     #standard FOV is 90, quake FOV is 110, play around with it if you want, looks funny.
     fov = 90
     screen = pygame.display.set_mode((display_width, display_height))
@@ -53,16 +54,26 @@ def main():
     light = Light((4, 4, 0), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
+    cube_vertices, cube_faces = read_object("objects/cube.obj")
+
     objects = [
         #(x, y, z), radius, color
-        #Sphere((0, 1, -5), 1, (200, 50, 50)),
-        #Sphere((4, 2, -7), 2, (100, 100, 100)),
-        #Sphere((-2, 0.5, -7), 0.5, (50, 200, 50)),
-        Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
-        Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (200, 25, 25)),
+        #Sphere((0, 1, -5), 1, (200, 0, 0)),
+        Sphere((-4, 1, -5), 2, (160, 32, 240)),
+        Sphere((-6, -0.5, 0), 0.5, (50, 200, 50)),
+        #Sphere((1.5, 0.5, -4), 0.5, (160, 32, 240)),
+        #Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
+        #Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (25, 25, 200)),
+
         #y, color
-        Plane(0, ((50, 50, 50), (80, 80, 80)))
+        Plane(-1, ((50, 50, 50), (80, 80, 80)))
     ]
+
+    for face in cube_faces:
+        point1 = cube_vertices[face[0]-1]
+        point2 = cube_vertices[face[1]-1]
+        point3 = cube_vertices[face[2]-1]
+        objects.append(Triangle(point1, point2, point3, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))))
 
     render_surface = pygame.Surface((render_width, render_height))
 
