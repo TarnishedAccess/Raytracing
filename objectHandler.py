@@ -1,6 +1,23 @@
 import numpy as np
 from ray import Ray
 
+def read_object(filename):
+    vertices = []
+    faces = []
+
+    with open(filename, 'r') as file:
+        for line in file:
+            if line.startswith('v'):
+                vertex = tuple(float(coord) for coord in line.split()[1:])
+                vertices.append(vertex)
+
+            elif line.startswith('f'):
+                face = tuple(int(index) for index in line.split()[1:])
+                faces.append(face)
+                
+    return vertices, faces
+
+
 class Object():
     #will add support for custom objects here later, make do with spheres (and maybe cubes) for now.
     pass
@@ -249,3 +266,7 @@ if __name__ == "__main__":
         print("Intersection Point:", intersection_point)
     else:
         print("No intersection.")
+
+    cube_vertices, cube_faces = read_object("objects/cube.obj")
+    print(cube_vertices)
+    print(cube_faces)
