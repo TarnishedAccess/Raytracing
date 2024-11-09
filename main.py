@@ -3,7 +3,6 @@ import numpy as np
 from camera import Camera
 from objectHandler import Sphere, Plane, Triangle, read_object
 from light import Light
-import random
 
 def main():
     pygame.init()
