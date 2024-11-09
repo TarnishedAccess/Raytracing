@@ -156,7 +156,12 @@ class Plane():
             screen.set_at((x, y), self.color)
         else:
             tile_size = 1.25
-            if (saved_intersection_point[0] // tile_size + saved_intersection_point[2] // tile_size) % 2 < 1:
+            if saved_intersection_point[0] < 0.5 and saved_intersection_point[0] > -0.5 and saved_intersection_point[2] < 0.5 and saved_intersection_point[2] > -0.5:
+                converted_color = np.array((200, 200, 50))
+                final_color = converted_color * intensity * light.color
+                final_color = np.clip(final_color, 0, 255)
+                screen.set_at((x, y), final_color)
+            elif (saved_intersection_point[0] // tile_size + saved_intersection_point[2] // tile_size) % 2 < 1:
                 converted_color = np.array(self.color[0])
                 #convert the colors to an np array to handle calculations
                 final_color = converted_color * intensity * light.color
