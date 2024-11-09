@@ -5,6 +5,95 @@ class Object():
     #will add support for custom objects here later, make do with spheres (and maybe cubes) for now.
     pass
 
+class Triangle():
+    def __init__(self, a, b, c, color):
+        self.v0 = np.array(a)
+        self.v1 = np.array(b)
+        self.v2 = np.array(c)
+        self.color = color
+
+    def intersect(self, ray):
+        #moller trumbore algorithm
+        #references:
+        #https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+        #https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection.html
+
+        #epsilon = 0.00001
+        #haven't had any issues with floating point precision so far but if something comes up just uncomment this and any epsilon instances further below
+        
+        #calculate two vectors of the triangle with a shared origin. This essentially just gives us the entire thing. Third edge is redundant
+        edge_vector1 = self.v1 - self.v0
+        edge_vector2 = self.v2 - self.v0
+
+        #get a vector perpendicular to both the ray and one of the edge vectors (2nd in this case). Think of the right hand rule.
+        perpendicular_vector = np.cross(ray.direction, edge_vector2)
+
+        #calculate determinant to see if the ray is parallel to the triangle
+        determinant = np.dot(edge_vector1, perpendicular_vector)
+
+        #we know that if a determinant is zero (or really close to zero in this instance to account for errors) then the ray is parallel to the triangle 
+        #if abs(determinant) < epsilon:
+        if abs(determinant) < 0:
+            return None, None
+
+        inverse_determinant = 1.0 / determinant
+
+        # Vector from the triangle's first vertex to the ray's origin
+        vertex_to_ray_origin = ray.origin - self.v0
+
+        #calculate u and v. These are barycentric coordinates. essentially they go from 0 to 1, add up to 1 with 0 being inside the triangle. think of them as weights. there's a third one but again we don't care about it because two are enough. 
+        #calculate u. This is the barycentric for edge_vector1
+        u_parameter = inverse_determinant * np.dot(vertex_to_ray_origin, perpendicular_vector)
+        if u_parameter < 0.0 or u_parameter > 1.0:
+            #if its less than 0 or bigger than 1 it's outside the triangle. We don't need to go any further.
+            return None, None
+
+        #calculate v.
+        cross_product_ray = np.cross(vertex_to_ray_origin, edge_vector1)
+        v_parameter = inverse_determinant * np.dot(ray.direction, cross_product_ray)
+
+        #here we make sure its actually inside the triangle.
+        if v_parameter < 0.0 or u_parameter + v_parameter > 1.0:
+            return None, None
+
+        #now we know for a fact its inside the triangle and intersects. We calculate how far along the ray the intersection is.
+        ray_distance = inverse_determinant * np.dot(edge_vector2, cross_product_ray)
+
+        #if ray_distance > epsilon:
+        if ray_distance > 0:
+            #get the intersection point and the distance.
+            intersection_point = ray.origin + ray.direction * ray_distance
+            return intersection_point, ray_distance
+        else:
+            #if its smaller than 0 the intersection is behind the ray (aka camera) and we just don't care about it.
+            return None, None
+
+        
+    def get_normal(self, intersection_point):
+        v0 = self.v0
+        v1 = self.v1
+        v2 = self.v2
+
+        edge1 = v1 - v0
+        edge2 = v2 - v0
+
+        normal = np.cross(edge1, edge2)
+        normal = normal / np.linalg.norm(normal)
+        return normal
+    
+    def render(self, screen, x, y, saved_intersection_point, light):
+        #refer to the plane rendering function everything is commented there.
+        normal = self.get_normal(saved_intersection_point)
+        light_direction = light.calculate_direction(saved_intersection_point)
+        if np.dot(normal, light_direction) < 0:
+            normal = -normal 
+        intensity = max(0, np.dot(normal, light_direction)) * light.strength
+
+        converted_color = np.array(self.color)
+        final_color = converted_color * intensity * light.color
+        final_color = np.clip(final_color, 0, 255)
+        screen.set_at((x, y), final_color)
+
 class Plane():
     def __init__(self, yLevel, color):
         self.yLevel = yLevel
@@ -147,9 +236,14 @@ if __name__ == "__main__":
     ray_direction_normalized = ray_direction / np.linalg.norm(ray_direction)
 
     ray = Ray(ray_origin, ray_direction_normalized)
-    sphere = Sphere(sphere_center, sphere_radius, (255, 0, 0))
+    #sphere = Sphere(sphere_center, sphere_radius, (255, 0, 0))
+    ray = Ray(origin=(0, 0, 0), direction=(1, 2, 1))
+    triangle = Triangle((0, 1, -5), (4, 2, -6), (-2, 0.5, -7), (200, 25, 25))
 
-    intersection_point = sphere.intersect(ray)
+    ray = Ray(origin=(0, 0, 0), direction=(0, 0, -1))
+    triangle = Triangle((0, 1, -5), (1, -1, -5), (-1, -1, -5), (255, 100, 100))
+
+    intersection_point = triangle.intersect(ray)
 
     if intersection_point is not None:
         print("Intersection Point:", intersection_point)

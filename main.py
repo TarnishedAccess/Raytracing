@@ -1,7 +1,7 @@
 import pygame
 import numpy as np
 from camera import Camera
-from objectHandler import Sphere, Plane
+from objectHandler import Sphere, Plane, Triangle
 from light import Light
 
 def main():
@@ -22,10 +22,12 @@ def main():
 
     objects = [
         #(x, y, z), radius, color
-        Sphere((0, 1, -5), 1, (200, 0, 0)),
-        Sphere((4, 2, -8), 2, (100, 100, 100)),
-        Sphere((-2, 0.5, -7), 0.5, (0, 200, 0)),
-        Sphere((1.5, 0.5, -4), 0.5, (160, 32, 240)),
+        #Sphere((0, 1, -5), 1, (200, 0, 0)),
+        #Sphere((4, 2, -8), 2, (100, 100, 100)),
+        #Sphere((-2, 0.5, -7), 0.5, (0, 200, 0)),
+        #Sphere((1.5, 0.5, -4), 0.5, (160, 32, 240)),
+        Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
+        Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (25, 25, 200)),
         #y, color
         Plane(0, ((50, 50, 50), (80, 80, 80)))
     ]

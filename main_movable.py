@@ -1,7 +1,7 @@
 import pygame
 import numpy as np
 from camera import Camera
-from objectHandler import Sphere, Plane
+from objectHandler import Sphere, Plane, Triangle
 from light import Light
 
 def update_view(screen, render_surface, camera, objects, render_width, render_height, light):
@@ -55,9 +55,11 @@ def main():
 
     objects = [
         #(x, y, z), radius, color
-        Sphere((0, 1, -5), 1, (200, 50, 50)),
-        Sphere((4, 2, -7), 2, (100, 100, 100)),
-        Sphere((-2, 0.5, -7), 0.5, (50, 200, 50)),
+        #Sphere((0, 1, -5), 1, (200, 50, 50)),
+        #Sphere((4, 2, -7), 2, (100, 100, 100)),
+        #Sphere((-2, 0.5, -7), 0.5, (50, 200, 50)),
+        Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
+        Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (200, 25, 25)),
         #y, color
         Plane(0, ((50, 50, 50), (80, 80, 80)))
     ]
