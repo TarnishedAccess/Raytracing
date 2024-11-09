@@ -3,7 +3,7 @@ import numpy as np
 from camera import Camera
 from objectHandler import Sphere, Plane, Triangle, read_object
 from light import Light
-import random
+from ray import Ray
 
 def update_view(screen, render_surface, camera, objects, render_width, render_height, light):
     #black background, will probably replace with a floor/skybox or something later
@@ -26,8 +26,21 @@ def update_view(screen, render_surface, camera, objects, render_width, render_he
                         closest_object = object
                         saved_intersection_point = intersection_point
                         #find the intersection point of each object and render the closest one.
+
             if closest_object:
-                closest_object.render(render_surface, x, y, saved_intersection_point, light)
+                shadow_ray = Ray(saved_intersection_point, light.position)
+                obstructed = False
+                for object in objects:
+                    if object is not closest_object:
+                        shadow_intersection_result = object.intersect(shadow_ray)
+                        if shadow_intersection_result[0] is not None:
+                            obstructed = True
+                            break
+                
+                if obstructed:
+                    render_surface.set_at((x, y), (0, 0, 0))
+                else:
+                    closest_object.render(render_surface, x, y, saved_intersection_point, light)
             else:
                 render_surface.set_at((x, y), background_color)
 
@@ -73,7 +86,7 @@ def main():
         point1 = cube_vertices[face[0]-1]
         point2 = cube_vertices[face[1]-1]
         point3 = cube_vertices[face[2]-1]
-        objects.append(Triangle(point1, point2, point3, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))))
+        objects.append(Triangle(point1, point2, point3, (200, 50, 50)))
 
     render_surface = pygame.Surface((render_width, render_height))
 

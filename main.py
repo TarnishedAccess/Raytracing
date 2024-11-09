@@ -3,6 +3,7 @@ import numpy as np
 from camera import Camera
 from objectHandler import Sphere, Plane, Triangle, read_object
 from light import Light
+from ray import Ray
 
 def main():
     pygame.init()
@@ -64,8 +65,24 @@ def main():
                         saved_intersection_point = intersection_point
                         #find the intersection point of each object and render the closest one.
             if closest_object:
-                closest_object.render(screen, x, y, saved_intersection_point, light)
-                pygame.display.update((x, y, 1, 1))
+                #if our ray hits an object, we fire off a second ray with an origin point of our intersection point towards the light source
+                shadow_ray = Ray(saved_intersection_point, light.position)
+                obstructed = False
+                #we check every object that is NOT the current object (because it cant intersect with itself? maybe? i think? that might be flawed actually)
+                for object in objects:
+                    if object is not closest_object:
+                        shadow_intersection_result = object.intersect(shadow_ray)
+                        #if the shadow ray intersects an object we break and flip the togggle.
+                        if shadow_intersection_result[0] is not None and shadow_intersection_result[1] < closest_t:
+                            obstructed = True
+                            break
+                
+                #if the shadow ray could not successfully make it to the light source we color the pixel black, otherwise we proceed as usual.
+                if obstructed:
+                    screen.set_at((x, y), (0, 0, 0))
+                else:
+                    closest_object.render(screen, x, y, saved_intersection_point, light)
+                    pygame.display.update((x, y, 1, 1))
             else:
                 screen.set_at((x, y), background_color)
                 pygame.display.update((x, y, 1, 1))
