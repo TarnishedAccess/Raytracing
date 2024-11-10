@@ -28,7 +28,9 @@ def update_view(screen, render_surface, camera, objects, render_width, render_he
                         #find the intersection point of each object and render the closest one.
 
             if closest_object:
-                shadow_ray = Ray(saved_intersection_point, light.position)
+                vector = np.array(light.position) - np.array(saved_intersection_point)
+                normalized_vector = vector / np.linalg.norm(vector)
+                shadow_ray = Ray(saved_intersection_point, normalized_vector)
                 obstructed = False
                 for object in objects:
                     if object is not closest_object:
@@ -64,7 +66,7 @@ def main():
     camera = Camera(camera_position, render_width, render_height, fov)
     moving_object = camera
     #(x, y, z), radius
-    light = Light((4, 4, 0), (255, 255, 255), 1)
+    light = Light((5, 12, 8), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
     cube_vertices, cube_faces = read_object("objects/cube.obj")

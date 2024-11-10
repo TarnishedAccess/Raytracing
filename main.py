@@ -8,8 +8,8 @@ from ray import Ray
 def main():
     pygame.init()
 
-    screen_width = 800
-    screen_height = 600
+    screen_width = 400
+    screen_height = 300
     #camera_position = (0, 1, 3)
     camera_position = (-3, 3, 6)
 
@@ -20,7 +20,7 @@ def main():
 
     camera = Camera(camera_position, screen_width, screen_height, fov)
 
-    light = Light((4, 4, 0), (200, 200, 200), 2)
+    light = Light((5, 12, 8), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
     cube_vertices, cube_faces = read_object("objects/cube.obj")
@@ -66,7 +66,9 @@ def main():
                         #find the intersection point of each object and render the closest one.
             if closest_object:
                 #if our ray hits an object, we fire off a second ray with an origin point of our intersection point towards the light source
-                shadow_ray = Ray(saved_intersection_point, light.position)
+                vector = np.array(light.position) - np.array(saved_intersection_point)
+                normalized_vector = vector / np.linalg.norm(vector)
+                shadow_ray = Ray(saved_intersection_point, normalized_vector)
                 obstructed = False
                 #we check every object that is NOT the current object (because it cant intersect with itself? maybe? i think? that might be flawed actually)
                 for object in objects:
