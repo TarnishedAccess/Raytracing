@@ -20,7 +20,7 @@ def main():
 
     camera = Camera(camera_position, screen_width, screen_height, fov)
 
-    light = Light((5, 12, 8), (255, 255, 255), 1)
+    light = Light((20, 12, 8), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
     cube_vertices, cube_faces = read_object("objects/cube.obj")

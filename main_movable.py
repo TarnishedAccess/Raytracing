@@ -66,7 +66,7 @@ def main():
     camera = Camera(camera_position, render_width, render_height, fov)
     moving_object = camera
     #(x, y, z), radius
-    light = Light((5, 12, 8), (255, 255, 255), 1)
+    light = Light((20, 12, 8), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
     cube_vertices, cube_faces = read_object("objects/cube.obj")
