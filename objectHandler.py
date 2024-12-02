@@ -4,6 +4,7 @@ from ray import Ray
 def read_object(filename):
     vertices = []
     faces = []
+    normals = []
 
     with open(filename, 'r') as file:
         for line in file:
@@ -14,25 +15,21 @@ def read_object(filename):
             elif line.startswith('f'):
                 face = tuple(int(index) for index in line.split()[1:])
                 faces.append(face)
+
+            elif line.startswith('n'):
+                normal = tuple(float(coord) for coord in line.split()[1:])
+                normals.append(normal)
                 
-    return vertices, faces
+    return vertices, faces, normals
 
-
-class Object():
-    """def __init__(self, filename, color):
-        self.vertices, self.faces = read_object(filename)
-        self.color = color"""
-    
-    #will refactor later, just want to make sure it works
-    pass
-    
 
 class Triangle():
-    def __init__(self, a, b, c, color):
+    def __init__(self, a, b, c, color, normal):
         self.v0 = np.array(a)
         self.v1 = np.array(b)
         self.v2 = np.array(c)
         self.color = color
+        self.normal = normal
 
     def intersect(self, ray):
         #moller trumbore algorithm
@@ -92,23 +89,12 @@ class Triangle():
 
         
     def get_normal(self, intersection_point):
-        v0 = self.v0
-        v1 = self.v1
-        v2 = self.v2
-
-        edge1 = v1 - v0
-        edge2 = v2 - v0
-
-        normal = np.cross(edge1, edge2)
-        normal = normal / np.linalg.norm(normal)
-        return normal
+        return np.array(self.normal)
     
     def render(self, screen, x, y, saved_intersection_point, light):
         #refer to the plane rendering function everything is commented there.
         normal = self.get_normal(saved_intersection_point)
         light_direction = light.calculate_direction(saved_intersection_point)
-        if np.dot(normal, light_direction) < 0:
-            normal = -normal 
         intensity = max(0, np.dot(normal, light_direction)) * light.strength
 
         converted_color = np.array(self.color)

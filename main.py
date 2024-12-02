@@ -23,13 +23,13 @@ def main():
     light = Light((20, 12, 8), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
-    cube_vertices, cube_faces = read_object("objects/cube.obj")
+    cube_vertices, cube_faces, cube_normals = read_object("objects/cube.obj")
 
     objects = [
         #(x, y, z), radius, color
         #Sphere((0, 1, -5), 1, (200, 0, 0)),
-        Sphere((-4, 1, -5), 2, (160, 32, 240)),
-        Sphere((-6, -0.5, 0), 0.5, (50, 200, 50)),
+        #Sphere((-4, 1, -5), 2, (160, 32, 240)),
+        #Sphere((-6, -0.5, 0), 0.5, (50, 200, 50)),
         #Sphere((1.5, 0.5, -4), 0.5, (160, 32, 240)),
         #Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
         #Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (25, 25, 200)),
@@ -38,11 +38,12 @@ def main():
         Plane(-1, ((50, 50, 50), (80, 80, 80)))
     ]
 
-    for face in cube_faces:
-        point1 = cube_vertices[face[0]-1]
-        point2 = cube_vertices[face[1]-1]
-        point3 = cube_vertices[face[2]-1]
-        objects.append(Triangle(point1, point2, point3, (200, 50, 50)))
+    for index in range(len(cube_faces)):
+        point1 = cube_vertices[cube_faces[index][0]-1]
+        point2 = cube_vertices[cube_faces[index][1]-1]
+        point3 = cube_vertices[cube_faces[index][2]-1]
+        normal = cube_normals[index]
+        objects.append(Triangle(point1, point2, point3, (200, 50, 50), normal))
 
     #cyan background, will probably replace with a floor/skybox or something later
     background_color = (135, 206, 235)
