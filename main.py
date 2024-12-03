@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from skybox import Skybox
 from camera import Camera
 from objectHandler import Sphere, Plane, Triangle, read_object
 from light import Light
@@ -7,6 +8,9 @@ from ray import Ray
 
 def main():
     pygame.init()
+
+    skybox_image = "skybox.png"
+    skybox = Skybox(skybox_image)
 
     screen_width = 400
     screen_height = 300
@@ -20,7 +24,7 @@ def main():
 
     camera = Camera(camera_position, screen_width, screen_height, fov)
 
-    light = Light((14, 6, 10), (255, 255, 255), 1)
+    light = Light((0, 6, 3), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
     cube_vertices, cube_faces, cube_normals = read_object("objects/cube.obj")
@@ -30,7 +34,7 @@ def main():
         #Sphere((0, 1, -5), 1, (200, 0, 0)),
         Sphere((-7, 0.5, -2), 1.5, (160, 32, 240)),
         Sphere((-12.5, 0.5, -1), 1.5, (200, 30, 50)),
-        Sphere((-3, 0, -6), 1, (50, 200, 50)),
+        Sphere((4, 0, -6), 1, (50, 200, 50)),
         #Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
         #Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (25, 25, 200)),
 
@@ -87,7 +91,11 @@ def main():
                     closest_object.render(screen, x, y, saved_intersection_point, light)
                 pygame.display.update((x, y, 1, 1))
             else:
-                screen.set_at((x, y), background_color)
+                #if there is no intersection, we find the corresponding pixel in the skybox
+                direction = ray.direction
+                normalized_direction = direction / np.linalg.norm(direction)
+                result = skybox.get_skybox_pixel(normalized_direction)
+                screen.set_at((x, y), result)
                 pygame.display.update((x, y, 1, 1))
 
     pygame.display.flip()
