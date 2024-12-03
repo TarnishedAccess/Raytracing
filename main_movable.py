@@ -26,21 +26,22 @@ def update_view(screen, render_surface, camera, objects, render_width, render_he
                         closest_object = object
                         saved_intersection_point = intersection_point
                         #find the intersection point of each object and render the closest one.
-
             if closest_object:
                 vector = np.array(light.position) - np.array(saved_intersection_point)
                 normalized_vector = vector / np.linalg.norm(vector)
-                shadow_ray = Ray(saved_intersection_point, normalized_vector)
+                OG_obj_light_distance = np.linalg.norm(np.array(light.position) - np.array(saved_intersection_point))
+                shadow_ray = Ray(saved_intersection_point + normalized_vector * 1e-4, normalized_vector)
                 obstructed = False
                 for object in objects:
                     if object is not closest_object:
                         shadow_intersection_result = object.intersect(shadow_ray)
                         if shadow_intersection_result[0] is not None:
-                            obstructed = True
-                            break
-                
+                            obj_light_distance = np.linalg.norm(np.array(light.position) - np.array(shadow_intersection_result[1]))
+                            if obj_light_distance < OG_obj_light_distance and obj_light_distance > 0:
+                                obstructed = True
+                                break
                 if obstructed:
-                    render_surface.set_at((x, y), (0, 0, 0))
+                    closest_object.render(render_surface, x, y, saved_intersection_point, light, True)
                 else:
                     closest_object.render(render_surface, x, y, saved_intersection_point, light)
             else:
@@ -58,7 +59,7 @@ def main():
     render_height = 50
     display_width = 900
     display_height = 600
-    camera_position = (-3, 3, 6)
+    camera_position = (-7, 3, 6)
     #standard FOV is 90, quake FOV is 110, play around with it if you want, looks funny.
     fov = 90
     screen = pygame.display.set_mode((display_width, display_height))
@@ -66,17 +67,18 @@ def main():
     camera = Camera(camera_position, render_width, render_height, fov)
     moving_object = camera
     #(x, y, z), radius
-    light = Light((20, 12, 8), (255, 255, 255), 1)
+    light = Light((14, 6, 10), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
-    cube_vertices, cube_faces = read_object("objects/cube.obj")
+    cube_vertices, cube_faces, cube_normals = read_object("objects/cube.obj")
 
     objects = [
         #(x, y, z), radius, color
-        #Sphere((0, 1, -5), 1, (200, 0, 0)),
-        Sphere((-4, 1, -5), 2, (160, 32, 240)),
-        Sphere((-6, -0.5, 0), 0.5, (50, 200, 50)),
-        #Sphere((1.5, 0.5, -4), 0.5, (160, 32, 240)),
+        #Sphere((0, 0, -5), 1, (200, 0, 0)),
+        Sphere((-8, 0.5, -2), 1.5, (160, 32, 240)),
+        Sphere((-12.5, 0.5, -1), 1.5, (200, 30, 50)),
+        Sphere((-3, 0, -6), 1, (50, 200, 50)),
+        #Sphere((-3, 0, 0), 1, (50, 200, 50)),
         #Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
         #Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (25, 25, 200)),
 
@@ -84,11 +86,12 @@ def main():
         Plane(-1, ((50, 50, 50), (80, 80, 80)))
     ]
 
-    for face in cube_faces:
-        point1 = cube_vertices[face[0]-1]
-        point2 = cube_vertices[face[1]-1]
-        point3 = cube_vertices[face[2]-1]
-        objects.append(Triangle(point1, point2, point3, (200, 50, 50)))
+    for index in range(len(cube_faces)):
+        point1 = cube_vertices[cube_faces[index][0]-1]
+        point2 = cube_vertices[cube_faces[index][1]-1]
+        point3 = cube_vertices[cube_faces[index][2]-1]
+        normal = cube_normals[index]
+        objects.append(Triangle(point1, point2, point3, (200, 50, 50), normal))
 
     render_surface = pygame.Surface((render_width, render_height))
 

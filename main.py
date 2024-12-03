@@ -11,7 +11,7 @@ def main():
     screen_width = 400
     screen_height = 300
     #camera_position = (0, 1, 3)
-    camera_position = (-3, 3, 6)
+    camera_position = (-7, 3, 6)
 
     #standard FOV is 90, quake FOB is 110, play around with it if you want, looks funny.
     fov = 90
@@ -20,7 +20,7 @@ def main():
 
     camera = Camera(camera_position, screen_width, screen_height, fov)
 
-    light = Light((20, 12, 8), (255, 255, 255), 1)
+    light = Light((14, 6, 10), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
     cube_vertices, cube_faces, cube_normals = read_object("objects/cube.obj")
@@ -28,9 +28,9 @@ def main():
     objects = [
         #(x, y, z), radius, color
         #Sphere((0, 1, -5), 1, (200, 0, 0)),
-        #Sphere((-4, 1, -5), 2, (160, 32, 240)),
-        #Sphere((-6, -0.5, 0), 0.5, (50, 200, 50)),
-        #Sphere((1.5, 0.5, -4), 0.5, (160, 32, 240)),
+        Sphere((-7, 0.5, -2), 1.5, (160, 32, 240)),
+        Sphere((-12.5, 0.5, -1), 1.5, (200, 30, 50)),
+        Sphere((-3, 0, -6), 1, (50, 200, 50)),
         #Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
         #Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (25, 25, 200)),
 
@@ -66,26 +66,26 @@ def main():
                         saved_intersection_point = intersection_point
                         #find the intersection point of each object and render the closest one.
             if closest_object:
-                #if our ray hits an object, we fire off a second ray with an origin point of our intersection point towards the light source
                 vector = np.array(light.position) - np.array(saved_intersection_point)
                 normalized_vector = vector / np.linalg.norm(vector)
-                shadow_ray = Ray(saved_intersection_point, normalized_vector)
+                OG_obj_light_distance = np.linalg.norm(np.array(light.position) - np.array(saved_intersection_point))
+                shadow_ray = Ray(saved_intersection_point + normalized_vector * 1e-4, normalized_vector)
                 obstructed = False
-                #we check every object that is NOT the current object (because it cant intersect with itself? maybe? i think? that might be flawed actually)
                 for object in objects:
                     if object is not closest_object:
                         shadow_intersection_result = object.intersect(shadow_ray)
-                        #if the shadow ray intersects an object we break and flip the togggle.
-                        if shadow_intersection_result[0] is not None and shadow_intersection_result[1] < closest_t:
-                            obstructed = True
-                            break
+                        if shadow_intersection_result[0] is not None:
+                            obj_light_distance = np.linalg.norm(np.array(light.position) - np.array(shadow_intersection_result[1]))
+                            if obj_light_distance < OG_obj_light_distance and obj_light_distance > 0:
+                                obstructed = True
+                                break
                 
                 #if the shadow ray could not successfully make it to the light source we color the pixel black, otherwise we proceed as usual.
                 if obstructed:
-                    screen.set_at((x, y), (0, 0, 0))
+                    closest_object.render(screen, x, y, saved_intersection_point, light, True)
                 else:
                     closest_object.render(screen, x, y, saved_intersection_point, light)
-                    pygame.display.update((x, y, 1, 1))
+                pygame.display.update((x, y, 1, 1))
             else:
                 screen.set_at((x, y), background_color)
                 pygame.display.update((x, y, 1, 1))
