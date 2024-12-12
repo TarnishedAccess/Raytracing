@@ -9,6 +9,8 @@ from ray import Ray
 def main():
     pygame.init()
 
+    reflection_depth = 1
+
     skybox_image = "skybox.png"
     skybox = Skybox(skybox_image)
 
@@ -24,7 +26,7 @@ def main():
 
     camera = Camera(camera_position, screen_width, screen_height, fov)
 
-    light = Light((0, 6, 3), (255, 255, 255), 1)
+    light = Light((-2, 6, 2), (255, 255, 255), 1)
     #might add multi-light support later? probably?
 
     cube_vertices, cube_faces, cube_normals = read_object("objects/cube.obj")
@@ -32,14 +34,15 @@ def main():
     objects = [
         #(x, y, z), radius, color
         #Sphere((0, 1, -5), 1, (200, 0, 0)),
-        Sphere((-7, 0.5, -2), 1.5, (160, 32, 240)),
-        Sphere((-12.5, 0.5, -1), 1.5, (200, 30, 50)),
-        Sphere((4, 0, -6), 1, (50, 200, 50)),
+        Sphere((-7, 0.5, -2), 1.5, (160, 32, 240), 0.5),
+        Sphere((-12.5, 0.5, -1), 1.5, (200, 30, 50), 0.5),
+        Sphere((4, 0, -6), 1, (50, 200, 50), 0.5),
         #Triangle((-1, 0, -3), (3, 0, -7), (-1, 4, -5), (200, 25, 25)),
         #Triangle((-4, 0, -3), (-1, 4, -5), (-1, 0, -3), (25, 25, 200)),
 
         #y, color
-        Plane(-1, ((50, 50, 50), (80, 80, 80)))
+        #Plane(-1, ((20, 20, 50), (40, 40, 100)), 0.5),
+        Plane(-1, (20, 20, 50), 0.5),
     ]
 
     for index in range(len(cube_faces)):
@@ -48,10 +51,6 @@ def main():
         point3 = cube_vertices[cube_faces[index][2]-1]
         normal = cube_normals[index]
         objects.append(Triangle(point1, point2, point3, (200, 50, 50), normal))
-
-    #cyan background, will probably replace with a floor/skybox or something later
-    background_color = (135, 206, 235)
-    screen.fill(background_color)
 
     for y in range(screen_height):
         for x in range(screen_width):
@@ -88,7 +87,46 @@ def main():
                 if obstructed:
                     closest_object.render(screen, x, y, saved_intersection_point, light, True)
                 else:
-                    closest_object.render(screen, x, y, saved_intersection_point, light)
+                    #if the ray successfully makes it to the light source, we check for reflections
+                    if closest_object.reflection > 0:
+                        if reflection_depth > 0:
+                            #if the object has a reflection, we find the reflection ray and call the function
+                            reflection_direction = ray.direction - 2 * np.dot(ray.direction, closest_object.get_normal(saved_intersection_point)) * closest_object.get_normal(saved_intersection_point)
+                            reflection_ray = Ray(saved_intersection_point + reflection_direction * 1e-4, reflection_direction)
+                            closest_reflection_t = np.inf
+                            closest_reflection_object = None
+                            saved_reflection_point = None
+
+                            for reflection_object in objects:
+                                reflection_intersection_point, reflection_t = reflection_object.intersect(reflection_ray)
+                                if reflection_intersection_point is not None:
+                                    if reflection_t < closest_reflection_t:
+                                        closest_reflection_t = reflection_t
+                                        closest_reflection_object = reflection_object
+                                        saved_reflection_point = reflection_intersection_point
+
+                            if closest_reflection_object:
+                                
+                                reflection_normal = closest_reflection_object.get_normal(saved_reflection_point)
+                                reflection_light_direction = light.calculate_direction(saved_reflection_point)
+                                reflection_intensity = max(0, np.dot(reflection_normal, reflection_light_direction)) * light.strength
+                                closest_reflection_object_color = np.array(closest_reflection_object.color)
+                                final_color = closest_reflection_object_color * reflection_intensity * light.color
+                                final_color = np.clip(final_color, 0, 255)              
+
+                                mixed_color = np.array(closest_object.color) * (1 - closest_object.reflection) + np.array(final_color) * closest_reflection_object.reflection
+                                mixed_color = np.clip(mixed_color, 0, 255)
+                                closest_object.render(screen, x, y, saved_intersection_point, light, False, mixed_color)
+                            else:
+                                skybox_pixel = skybox.get_skybox_pixel(reflection_direction)[:3]
+                                mixed_color = np.array(closest_object.color) * (1 - closest_object.reflection) + np.array(skybox_pixel) * closest_object.reflection
+                                mixed_color = np.clip(mixed_color, 0, 255)
+
+                                closest_object.render(screen, x, y, saved_intersection_point, light, False, mixed_color)
+                        else:
+                            closest_object.render(screen, x, y, saved_intersection_point, light, False)
+                    else:
+                        closest_object.render(screen, x, y, saved_intersection_point, light)
                 pygame.display.update((x, y, 1, 1))
             else:
                 #if there is no intersection, we find the corresponding pixel in the skybox

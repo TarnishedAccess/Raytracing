@@ -26,12 +26,13 @@ def read_object(filename):
 
 
 class Triangle():
-    def __init__(self, a, b, c, color, normal):
+    def __init__(self, a, b, c, color, normal, reflection=0):
         self.v0 = np.array(a)
         self.v1 = np.array(b)
         self.v2 = np.array(c)
         self.color = color
         self.normal = normal
+        self.reflection = reflection
 
     def intersect(self, ray):
         #moller trumbore algorithm
@@ -93,7 +94,7 @@ class Triangle():
     def get_normal(self, intersection_point):
         return np.array(self.normal)
     
-    def render(self, screen, x, y, saved_intersection_point, light, inShadow=False):
+    def render(self, screen, x, y, saved_intersection_point, light, inShadow=False, new_color=None):
         #refer to the plane rendering function everything is commented there.
         normal = self.get_normal(saved_intersection_point)
         light_direction = light.calculate_direction(saved_intersection_point)
@@ -103,13 +104,17 @@ class Triangle():
         final_color = converted_color * intensity * light.color
         if inShadow:
             final_color *= shadowMultiplier
+
+        if new_color is not None:
+            final_color = new_color
         final_color = np.clip(final_color, 0, 255)
         screen.set_at((x, y), final_color)
 
 class Plane():
-    def __init__(self, yLevel, color):
+    def __init__(self, yLevel, color, reflection=0):
         self.yLevel = yLevel
         self.color = color
+        self.reflection = reflection
 
     def intersect(self, ray):
         origin = np.array(ray.origin)
@@ -131,7 +136,7 @@ class Plane():
 
         return (intersection, t)
     
-    def render(self, screen, x, y, saved_intersection_point, light, inShadow=False):
+    def render(self, screen, x, y, saved_intersection_point, light, inShadow=False, new_color=None):
 
         normal = self.get_normal(saved_intersection_point)
         light_direction = light.calculate_direction(saved_intersection_point)
@@ -142,8 +147,18 @@ class Plane():
 
         #If the plane only has one color, we use it.
         #Otherwise we use a checkerboard pattern
-        if len(self.color) == 1:
-            screen.set_at((x, y), self.color)
+        if len(self.color) == 3:
+
+            if new_color is not None:
+                converted_color = new_color
+            else:
+                converted_color = np.array(self.color)
+
+            final_color = converted_color * intensity * light.color
+            if inShadow:
+                final_color *= shadowMultiplier
+            final_color = np.clip(final_color, 0, 255)
+            screen.set_at((x, y), final_color)
         else:
             tile_size = 1.25
             if saved_intersection_point[0] < 0.5 and saved_intersection_point[0] > -0.5 and saved_intersection_point[2] < 0.5 and saved_intersection_point[2] > -0.5:
@@ -176,11 +191,11 @@ class Plane():
         return np.array([0, 1, 0])
 
 class Sphere():
-    def __init__(self, center, radius, color):
+    def __init__(self, center, radius, color, reflection=0):
         self.center = center
         self.radius = radius
         self.color = color
-
+        self.reflection = reflection
     def intersect(self, ray):
 
         #Variables:
@@ -228,16 +243,22 @@ class Sphere():
             intersection = origin + direction * t
             return (intersection, t)
         
-    def render(self, screen, x, y, saved_intersection_point, light, inShadow=False):
+    def render(self, screen, x, y, saved_intersection_point, light, inShadow=False, new_color=None):
         #refer to the plane rendering function everything is commented there.
         normal = self.get_normal(saved_intersection_point)
         light_direction = light.calculate_direction(saved_intersection_point)
         intensity = max(0, np.dot(normal, light_direction)) * light.strength
 
-        converted_color = np.array(self.color)
+        if new_color is not None:
+            converted_color = new_color
+        else:
+            converted_color = np.array(self.color)
+
         final_color = converted_color * intensity * light.color
         if inShadow:
             final_color *= shadowMultiplier
+
+
         final_color = np.clip(final_color, 0, 255)
         screen.set_at((x, y), final_color)
 
